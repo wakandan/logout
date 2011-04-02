@@ -11,33 +11,43 @@ var linkTargetFinder = function () {
 		},
 			
 		run : function () {
-			var head = content.document.getElementsByTagName("head")[0],
-				style = content.document.getElementById("link-target-finder-style"),
-				allLinks = content.document.getElementsByTagName("a"),
-				foundLinks = 0;
-			
-			if (!style) {
-				style = content.document.createElement("link");
-				style.id = "link-target-finder-style";
-				style.type = "text/css";
-				style.rel = "stylesheet";
-				style.href = "chrome://linktargetfinder/skin/skin.css";
-				head.appendChild(style);
-			}	
-						
-			for (var i=0, il=allLinks.length; i<il; i++) {
-				elm = allLinks[i];
-				if (elm.getAttribute("target")) {
-					elm.className += ((elm.className.length > 0)? " " : "") + "link-target-finder-selected";
-					foundLinks++;
+			//only works with google for now
+			//var link = content.document.getElementById("gb_71");
+			//content.document.location = link.attributes['href'].value;
+			var keywords = new Array();
+			keywords.push("Logout");
+			keywords.push("Log out");
+			keywords.push("Sign out");
+			keywords.push("Signout");
+
+			//find all the links first
+			var xPath_expression = "";
+			for(var i = 0; i<keywords.length; i++){
+				if(i==0){
+					xPath_expression += ("contains(.,'" + keywords[i] + "')");
+				}else{
+					xPath_expression += (" or contains(.,'" + keywords[i] + "')");
 				}
+			}		
+			var nodes = content.document.evaluate(
+							"//a/text()["+xPath_expression+"]", 
+							content.document, 
+							null, 
+							XPathResult.ANY_TYPE, 
+							null);
+			var x = nodes.iterateNext();
+			while(x!=null){			
+				Firebug.Console.log(x.parentNode.attributes['href'].value);	
+				//first try
+				content.document.location = x.parentNode.attributes['href'].value;
+				
+				//second try
+				x.parentNode.click();
+				x = nodes.iterateNext();
 			}
-			if (foundLinks === 0) {
-				alert("No links found with a target attribute");
-			}
-			else {
-				alert("Found " + foundLinks + " links with a target attribute");
-			}	
+
+			//find other type of nodes that can be clicked			
+						
 		}
 	};
 }();
